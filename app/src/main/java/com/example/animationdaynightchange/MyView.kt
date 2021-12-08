@@ -16,18 +16,18 @@ class MyView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
     private var startPathValue = 0F
     private var endPathValue = 0F
-    private var timeDayInterval = 0L
-    private var timeDaysInterval = 0L
 
-    private var isDay: Boolean = true
     private var isChangeDirection = false
 
     private val horizonPaint = Paint()
     private val sunAndMoonPaint = Paint()
     private val path = Path()
     private val valueDirectionAnimator = ValueAnimator()
+
+    private val repoLocal: RepoLocal = RepoLocalImpl()
+
     private var pathMeasure: PathMeasure = PathMeasure()
-    private var timeStartAnimationChangeDirection: Long = 0
+    private var timeStartAnimationChangeDirection = 0L
     private var restOfTimeAnimationChangeDirection = 0L
 
     private var colorTo = Color.rgb(135, 206, 235)
@@ -39,7 +39,16 @@ class MyView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
         pathMeasure.getPosTan(v, pos, null)
         x = pos[0].toInt()
         y = pos[1].toInt()
+
     }
+
+    private val listenerColorAnimator = ValueAnimator.AnimatorUpdateListener { animation ->
+        setBackgroundColor(animation?.animatedValue as Int)
+    }
+
+    private val colorValueAnimator = ColorValueAnimator(
+        colorTo, colorFrom, listenerColorAnimator, repoLocal
+    )
 
     init {
         valueDirectionAnimator.addListener(object : Animator.AnimatorListener {
@@ -49,19 +58,20 @@ class MyView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
             override fun onAnimationEnd(animation: Animator) {
                 restOfTimeAnimationChangeDirection = 0L
-                isDay = !isDay
+                repoLocal.isDayDirectionAnimation = !repoLocal.isDayDirectionAnimation
                 valueDirectionAnimator.apply {
                     duration = when {
-                        isDay -> timeDayInterval
-                        else -> timeDaysInterval - timeDayInterval
+                        repoLocal.isDayDirectionAnimation -> repoLocal.timeIntervalDay
+                        else -> repoLocal.timeIntervalDays - repoLocal.timeIntervalDay
                     }
                     if (isChangeDirection) {
                         isChangeDirection = false
                         setFloatValues(startPathValue, endPathValue)
                     }
-                    this.start()
+                    start()
                 }
             }
+
             override fun onAnimationCancel(animation: Animator) {}
             override fun onAnimationRepeat(animation: Animator) {}
         })
@@ -76,11 +86,6 @@ class MyView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
     }
 
     private fun drawHorizon(canvas: Canvas?) {
-        if (isDay)
-            setBackgroundColor(colorTo)
-        else
-            setBackgroundColor(colorFrom)
-
         val gradient = LinearGradient(
             0F,
             height - 300F,
@@ -106,11 +111,13 @@ class MyView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
             style = Paint.Style.FILL
         }
 
-        if (isDay) {
+        if (repoLocal.isDayDirectionAnimation) {
             drawSun(canvas)
         } else {
             drawMoon(canvas)
         }
+
+
     }
 
     private fun drawMoon(canvas: Canvas?) {
@@ -141,35 +148,46 @@ class MyView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
     }
 
 
-    fun animateStart(timeDay: Long = TIMER_INTERVAL, timeDays: Long = TIMER_INTERVAL, isChange: Boolean) {
-        timeDayInterval = 1000L * timeDay
-        timeDaysInterval = 1000L * timeDays
+    fun animateStart(
+        timeDay: Long = TIMER_INTERVAL,
+        timeDays: Long = TIMER_INTERVAL,
+        isChange: Boolean
+    ) {
+        repoLocal.apply {
+            timeIntervalDay = timeDay
+            timeIntervalDays = timeDays
+            isChangeColorAnimation = isChange
+            leftToRightFlags  = !leftToRightFlags
+            leftFlag = x.toFloat() < (width.toFloat()) / 2
+        }
+
 
         path.arcTo(RectF(0F, 0F, width.toFloat() - 200F, 600F), 180F, 180F)
         isChangeDirection = isChange
         pathMeasure = PathMeasure(path, false)
 
         setValuesDirectionValueAnimator(isChangeDirection)
-
+        colorValueAnimator.setColorValuesAnimator()
         valueDirectionAnimator.run {
+
             duration = if (isChangeDirection)
                 restOfTimeAnimationChangeDirection + System.currentTimeMillis() - timeStartAnimationChangeDirection
             else
-                timeDayInterval
+                repoLocal.timeIntervalDay
             interpolator = LinearInterpolator()
             timeStartAnimationChangeDirection = System.currentTimeMillis()
-            restOfTimeAnimationChangeDirection = if (isDay)
-                timeDayInterval - duration
+            restOfTimeAnimationChangeDirection = if (repoLocal.isDayDirectionAnimation)
+                repoLocal.timeIntervalDay - duration
             else
-                timeDays - timeDayInterval - duration
+                repoLocal.timeIntervalDays - repoLocal.timeIntervalDay - duration
             start()
         }
     }
 
-    private fun setValuesDirectionValueAnimator(isChangeDirection: Boolean){
+    private fun setValuesDirectionValueAnimator(isChangeDirection: Boolean) {
         if (isChangeDirection) {
             endPathValue = startPathValue.also { startPathValue = endPathValue }
-            valueDirectionAnimator.setFloatValues(x.toFloat() + 150F, endPathValue)
+            valueDirectionAnimator.setFloatValues(x + 150F, endPathValue)
         } else {
             startPathValue = 0F
             endPathValue = pathMeasure.length
