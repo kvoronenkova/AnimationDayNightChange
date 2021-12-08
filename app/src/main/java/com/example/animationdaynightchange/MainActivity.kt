@@ -1,13 +1,10 @@
 package com.example.animationdaynightchange
 
-import android.app.Activity
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.EditText
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
-import java.util.*
-import kotlin.concurrent.timerTask
+
 
 class MainActivity : AppCompatActivity() {
 
