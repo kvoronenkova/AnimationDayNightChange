@@ -7,8 +7,11 @@ interface RepoLocal {
     var isDayDirectionAnimation: Boolean
     var isDayColorAnimation: Boolean
     var isChangeColorAnimation: Boolean
+    var isChangeDirectionPathAnimation: Boolean
+
     var leftToRightFlags: Boolean
     var leftFlag: Boolean
 
-
+    var startPath: Float
+    var endPath: Float
 }

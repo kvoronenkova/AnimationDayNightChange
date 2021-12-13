@@ -51,7 +51,7 @@ class ColorValueAnimator(
     }
 
 
-    fun setColorValuesAnimator() {
+    fun startAnimation() {
         when {
             repoLocal.isDayDirectionAnimation -> {
                 if (repoLocal.isChangeColorAnimation) {
