@@ -39,7 +39,8 @@ class MyView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
         colorTo, colorFrom, listenerColorAnimator, repoLocal
     )
 
-    private val directionPathAnimator = DirectionPathAnimator(listenerDirectionPathAnimator, repoLocal)
+    private val directionPathAnimator =
+        DirectionPathAnimator(listenerDirectionPathAnimator, repoLocal)
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
@@ -49,20 +50,11 @@ class MyView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
     }
 
     private fun drawHorizon(canvas: Canvas?) {
-        val gradient = LinearGradient(
-            0F,
-            height - 300F,
-            width.toFloat(),
-            height.toFloat(),
-            Color.GREEN,
-            Color.CYAN,
-            Shader.TileMode.CLAMP
-        )
 
         horizonPaint.apply {
             style = Paint.Style.FILL
             isDither = true
-            shader = gradient
+            color = Color.rgb(26, 148, 49)
         }
 
         canvas?.drawRect(0F, height - 300F, width.toFloat(), height.toFloat(), horizonPaint)
@@ -72,15 +64,13 @@ class MyView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
         sunAndMoonPaint.apply {
             color = Color.YELLOW
             style = Paint.Style.FILL
+            maskFilter = BlurMaskFilter(60F, BlurMaskFilter.Blur.SOLID)
         }
-
         if (repoLocal.isDayDirectionAnimation) {
             drawSun(canvas)
         } else {
             drawMoon(canvas)
         }
-
-
     }
 
     private fun drawMoon(canvas: Canvas?) {
@@ -121,7 +111,7 @@ class MyView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
             timeIntervalDays = timeDays
             isChangeColorAnimation = isChange
             isChangeDirectionPathAnimation = isChange
-            leftToRightFlags  = !leftToRightFlags
+            leftToRightFlags = !leftToRightFlags
             leftFlag = x.toFloat() < (width.toFloat()) / 2
         }
 
